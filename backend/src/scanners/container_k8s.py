@@ -1,65 +1,25 @@
-# Container and Kubernetes Vulnerability Checks
+from typing import Dict, List
 
-class ContainerK8sVulnerabilities:
-    def __init__(self):
-        self.vulnerability_checks = [
-            "Docker image scanning",
-            "Kubernetes RBAC bypass",
-            "API server exposure",
-            "etcd exposure",
-            "Container escape techniques",
-            "Privilege escalation",
-            "Secret exposure",
-            "Namespace bypass",
-            "ServiceAccount exploitation",
-            "Network policy bypass"
-        ]
+from src.scanners.module_checks import build_checks_for_module
 
-    def scan_docker_image(self, image_name):
-        # Implementation for scanning Docker images for vulnerabilities
-        pass
+MODULE_CODE = "CONTAINER_K8S"
+MODULE_TIER = "Container/Kubernetes"
+CHECK_COUNT = 150
+PAYLOADS = ["privileged-pod", "hostpath-mount", "serviceaccount-token-abuse"]
+DETECTION_PATTERNS = ["rbac-misconfiguration", "etcd-exposure", "container-escape-vector"]
+EXPLOITATION_TECHNIQUES = ["namespace-breakout", "api-server-abuse", "runtime-privilege-escalation"]
+REMEDIATION_SUGGESTIONS = ["enforce-pod-security", "restrict-service-accounts", "harden-k8s-network-policies"]
+TEST_CASES = ["cluster-rbac-audit", "image-policy-validation", "pod-security-standards"]
 
-    def check_rbac_bypass(self):
-        # Implementation for checking Kubernetes RBAC bypass
-        pass
 
-    def check_api_server_exposure(self):
-        # Implementation for checking API server exposure
-        pass
-
-    def check_etcd_exposure(self):
-        # Implementation for checking etcd exposure
-        pass
-
-    def check_container_escape(self):
-        # Implementation for checking container escape techniques
-        pass
-
-    def check_privilege_escalation(self):
-        # Implementation for privilege escalation checks
-        pass
-
-    def check_secret_exposure(self):
-        # Implementation for checking secret exposure in Kubernetes
-        pass
-
-    def check_namespace_bypass(self):
-        # Implementation for checking namespace bypass techniques
-        pass
-
-    def check_service_account_exploitation(self):
-        # Implementation for ServiceAccount exploitation
-        pass
-
-    def check_network_policy_bypass(self):
-        # Implementation for checking network policy bypass
-        pass
-
-    def run_scans(self):
-        for check in self.vulnerability_checks:
-            print(f"Running check: {check}")
-            # More logic to handle specific checks can be added here
-
-# Example usage:
-# scanner = ContainerK8sVulnerabilities()
-# scanner.run_scans()
+def build_checks() -> List[Dict[str, str]]:
+    return build_checks_for_module(
+        MODULE_CODE,
+        MODULE_TIER,
+        CHECK_COUNT,
+        PAYLOADS,
+        DETECTION_PATTERNS,
+        EXPLOITATION_TECHNIQUES,
+        REMEDIATION_SUGGESTIONS,
+        TEST_CASES,
+    )

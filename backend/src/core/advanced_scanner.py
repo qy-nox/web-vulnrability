@@ -6,6 +6,24 @@ from src.core.cvss_calculator import CVSSCalculator, CVSSVector
 from src.core.exploit_chain_analyzer import ExploitChainAnalyzer
 from src.core.ml_engine import MLEngine
 from src.scanners import (
+    advanced_injection,
+    api_security,
+    authentication_bypass,
+    business_logic,
+    cloud_security,
+    cloudflare_waf_bypass,
+    container_k8s,
+    cryptography,
+    dependencies,
+    file_upload,
+    information_disclosure,
+    javascript_dom,
+    network_analysis,
+    path_traversal,
+    server_side_rendering,
+    session_management,
+    ssl_tls,
+    ssrf,
     tier10_compliance,
     tier1_zeroday,
     tier2_api_security,
@@ -16,6 +34,8 @@ from src.scanners import (
     tier7_auth_session,
     tier8_business_logic,
     tier9_ssl_tls,
+    websocket,
+    xxe_deserialization,
 )
 
 
@@ -43,6 +63,26 @@ class AdvancedScanner:
             tier8_business_logic,
             tier9_ssl_tls,
             tier10_compliance,
+            cloudflare_waf_bypass,
+            advanced_injection,
+            authentication_bypass,
+            business_logic,
+            api_security,
+            cloud_security,
+            xxe_deserialization,
+            container_k8s,
+            file_upload,
+            ssrf,
+            information_disclosure,
+            cryptography,
+            dependencies,
+            websocket,
+            javascript_dom,
+            session_management,
+            path_traversal,
+            server_side_rendering,
+            network_analysis,
+            ssl_tls,
         ]
         self.checks = self._load_checks()
         self.ml_engine = MLEngine()
