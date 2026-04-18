@@ -1,0 +1,13 @@
+{
+  "name": "enterprise-web-vulnerability-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'frontend scaffold ready'",
+    "test": "echo 'no frontend tests configured'"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

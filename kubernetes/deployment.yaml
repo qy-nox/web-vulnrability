@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-vulnerability-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-vulnerability-backend
+  template:
+    metadata:
+      labels:
+        app: web-vulnerability-backend
+    spec:
+      containers:
+        - name: backend
+          image: web-vulnerability-backend:latest
+          ports:
+            - containerPort: 8000
