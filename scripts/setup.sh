@@ -2,9 +2,14 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_REQS="${ROOT_DIR}/backend/requirements.txt"
 
 echo "[1/2] Installing backend dependencies"
-python -m pip install -r "${ROOT_DIR}/backend/requirements.txt"
+if [[ ! -f "${BACKEND_REQS}" ]]; then
+  echo "Missing requirements file: ${BACKEND_REQS}" >&2
+  exit 1
+fi
+python3 -m pip install -r "${BACKEND_REQS}"
 
 if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
   echo "[2/2] Installing frontend dependencies"
@@ -12,5 +17,5 @@ if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
 fi
 
 echo "Setup complete."
-echo "Run backend locally: ${ROOT_DIR}/run.sh"
-echo "Run backend with Docker: ${ROOT_DIR}/run.sh --docker"
+echo "Run backend locally: ./run.sh"
+echo "Run backend with Docker: ./run.sh --docker"

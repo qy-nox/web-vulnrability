@@ -1,14 +1,18 @@
 @echo off
 setlocal
+set ROOT_DIR=%~dp0
+if "%ROOT_DIR:~-1%"=="\" set ROOT_DIR=%ROOT_DIR:~0,-1%
 
 if "%1"=="--docker" (
-  docker compose -f docker-compose.yml up --build
+  docker compose -f "%ROOT_DIR%\docker-compose.yml" up --build
   exit /b %errorlevel%
 )
 
-cd /d backend
+cd /d "%ROOT_DIR%\backend"
+if errorlevel 1 exit /b %errorlevel%
+
 python -m pip install -r requirements.txt
 if errorlevel 1 exit /b %errorlevel%
 
 set PYTHONPATH=.
-python -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000 --reload

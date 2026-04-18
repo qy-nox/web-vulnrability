@@ -17,5 +17,5 @@ if [[ "${1:-}" == "--docker" ]]; then
 fi
 
 cd "${BACKEND_DIR}"
-python -m pip install -r requirements.txt
-PYTHONPATH=. uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+python3 -m pip install -r requirements.txt
+PYTHONPATH=. uvicorn src.api.app:app --host 127.0.0.1 --port 8000 --reload
