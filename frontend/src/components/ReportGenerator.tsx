@@ -41,7 +41,16 @@ export default function ReportGenerator({ scanId, vulnerabilities }: Props): JSX
   };
 
   const exportPdf = (): void => {
-    download(`${scanId || "scan"}-report.pdf`, "PDF export placeholder", "application/pdf");
+    const printable = window.open("", "_blank");
+    if (!printable) {
+      return;
+    }
+    printable.document.write(
+      `<html><body><h1>Scan ${scanId}</h1><p>Findings: ${vulnerabilities.length}</p><p>Use Print → Save as PDF.</p></body></html>`
+    );
+    printable.document.close();
+    printable.focus();
+    printable.print();
   };
 
   return (

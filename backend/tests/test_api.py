@@ -39,6 +39,8 @@ def test_scan_and_results_endpoints() -> None:
     first = vulnerabilities.json()["items"][0]
     assert "vulnerability_type" in first
     assert "confidence" in first
+    invalid_filter = client.get("/api/vulnerabilities?severity=invalid")
+    assert invalid_filter.status_code == 400
 
     report = client.get(f"/api/report/{scan_id}")
     assert report.status_code == 200

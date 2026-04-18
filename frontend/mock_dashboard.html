@@ -91,6 +91,7 @@
     const scanBtn = document.getElementById("scanBtn");
     const monitor = document.getElementById("monitor");
     const downloads = ["downloadHtml","downloadPdf","downloadJson","downloadCsv"].map(id => document.getElementById(id));
+    const MAX_DISPLAYED_VULNERABILITIES = 100;
 
     let scanId = "";
     let vulnerabilities = [];
@@ -110,16 +111,51 @@
         (confidenceValue === "all" || (v.confidence || "").toLowerCase() === confidenceValue) &&
         (!parameterValue || (v.affected_parameter || "").toLowerCase().includes(parameterValue))
       );
-      resultsBody.innerHTML = rows.slice(0, 100).map(v => `
-        <tr>
-          <td><strong>${v.title}</strong><br><small>${v.description || ""}</small></td>
-          <td><span class="badge ${v.severity.toLowerCase()}">${v.severity}</span></td>
-          <td>${v.cvss_score}</td>
-          <td>${v.cwe}</td>
-          <td>${v.proof_of_concept || ""}</td>
-          <td>${v.remediation || ""}</td>
-        </tr>
-      `).join("") || `<tr><td colspan="6">No vulnerabilities yet.</td></tr>`;
+      resultsBody.innerHTML = "";
+      const visible = rows.slice(0, MAX_DISPLAYED_VULNERABILITIES);
+      if (!visible.length) {
+        const emptyRow = document.createElement("tr");
+        const emptyCell = document.createElement("td");
+        emptyCell.colSpan = 6;
+        emptyCell.textContent = "No vulnerabilities yet.";
+        emptyRow.appendChild(emptyCell);
+        resultsBody.appendChild(emptyRow);
+        return;
+      }
+
+      visible.forEach((v) => {
+        const tr = document.createElement("tr");
+
+        const titleCell = document.createElement("td");
+        const strong = document.createElement("strong");
+        strong.textContent = v.title || "";
+        const desc = document.createElement("small");
+        desc.textContent = v.description || "";
+        titleCell.appendChild(strong);
+        titleCell.appendChild(document.createElement("br"));
+        titleCell.appendChild(desc);
+
+        const severityCell = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = `badge ${String(v.severity || "").toLowerCase()}`;
+        badge.textContent = v.severity || "";
+        severityCell.appendChild(badge);
+
+        const cvssCell = document.createElement("td");
+        cvssCell.textContent = String(v.cvss_score ?? "");
+
+        const cweCell = document.createElement("td");
+        cweCell.textContent = v.cwe || "";
+
+        const proofCell = document.createElement("td");
+        proofCell.textContent = v.proof_of_concept || "";
+
+        const remediationCell = document.createElement("td");
+        remediationCell.textContent = v.remediation || "";
+
+        [titleCell, severityCell, cvssCell, cweCell, proofCell, remediationCell].forEach((cell) => tr.appendChild(cell));
+        resultsBody.appendChild(tr);
+      });
     }
 
     async function startScan() {
@@ -175,7 +211,14 @@
       download(`${scanId || "scan"}-report.html`, `<html><body><h1>Scan ${scanId}</h1><p>Findings: ${vulnerabilities.length}</p></body></html>`, "text/html");
     };
     document.getElementById("downloadPdf").onclick = () => {
-      download(`${scanId || "scan"}-report.pdf`, "PDF export placeholder", "application/pdf");
+      const printable = window.open("", "_blank");
+      if (!printable) {
+        return;
+      }
+      printable.document.write(`<html><body><h1>Scan ${scanId}</h1><p>Findings: ${vulnerabilities.length}</p><p>Use Print → Save as PDF.</p></body></html>`);
+      printable.document.close();
+      printable.focus();
+      printable.print();
     };
 
     severityFilter.onchange = renderRows;

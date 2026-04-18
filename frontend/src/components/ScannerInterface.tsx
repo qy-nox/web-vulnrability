@@ -29,16 +29,25 @@ export default function ScannerInterface({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
+      if (!scanResponse.ok) {
+        const message = await scanResponse.text();
+        throw new Error(message || `Scan API failed (${scanResponse.status})`);
+      }
       const scanData = await scanResponse.json();
       onScanStarted(scanData.scan_id);
       onProgress(65);
 
       const vulnResponse = await fetch("http://localhost:8000/api/vulnerabilities");
+      if (!vulnResponse.ok) {
+        const message = await vulnResponse.text();
+        throw new Error(message || `Vulnerability API failed (${vulnResponse.status})`);
+      }
       const vulnData = await vulnResponse.json();
       onVulnerabilitiesLoaded(vulnData.items ?? []);
       onProgress(100);
     } catch (scanError) {
-      setError(`Failed to run scan: ${String(scanError)}`);
+      const message = scanError instanceof Error ? scanError.message : String(scanError);
+      setError(`Failed to run scan: ${message}`);
       onProgress(0);
     } finally {
       setLoading(false);

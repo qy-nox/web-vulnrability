@@ -3,6 +3,8 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field, HttpUrl
 
+from datetime import timezone
+
 from src.core.advanced_scanner import SCANNER
 from src.database.db_manager import InMemoryDBManager
 from src.reporting.report_generator import ReportGenerator
@@ -12,6 +14,11 @@ router = APIRouter()
 DB = InMemoryDBManager()
 REPORTER = ReportGenerator()
 DB.initialize_schema()
+ALLOWED_SEVERITIES = {"critical", "high", "medium", "low"}
+
+
+def _utc_iso(dt) -> str:
+    return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 class ScanRequest(BaseModel):
@@ -66,7 +73,7 @@ def list_scans() -> dict:
                 "target": r.target,
                 "risk_score": r.risk_score,
                 "blocked": r.blocked,
-                "created_at": r.created_at.isoformat() + "Z",
+                "created_at": _utc_iso(r.created_at),
             }
             for r in records
         ],
@@ -85,12 +92,14 @@ def get_scan(scan_id: str) -> dict:
         "blocked": record.blocked,
         "findings_count": len(record.findings),
         "findings": record.findings,
-        "created_at": record.created_at.isoformat() + "Z",
+        "created_at": _utc_iso(record.created_at),
     }
 
 
 @router.get("/api/vulnerabilities")
 def list_vulnerabilities(severity: str | None = Query(default=None)) -> dict:
+    if severity and severity.lower() not in ALLOWED_SEVERITIES:
+        raise HTTPException(status_code=400, detail="severity must be one of critical/high/medium/low")
     rows = DB.list_vulnerabilities()
     if severity:
         rows = [row for row in rows if row.severity.lower() == severity.lower()]
@@ -149,7 +158,7 @@ def get_results() -> dict:
                 "risk_score": row.risk_score,
                 "blocked": row.blocked,
                 "findings_count": row.findings_count,
-                "created_at": row.created_at.isoformat() + "Z",
+                "created_at": _utc_iso(row.created_at),
             }
             for row in rows
         ],

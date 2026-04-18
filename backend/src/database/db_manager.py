@@ -44,19 +44,28 @@ class InMemoryDBManager:
             )
         )
 
+        # Approximate CVSS v3.1 base scores per severity band for reporting output.
+        cvss_by_severity = {
+            "critical": 9.8,
+            "high": 8.0,
+            "medium": 5.5,
+            "low": 3.1,
+        }
+
         for finding in findings:
             vuln_id = f"vuln-{len(self._vulnerabilities) + 1}"
+            severity = finding.get("severity", "low").lower()
             self._vulnerabilities.append(
                 VulnerabilityRecord(
                     id=vuln_id,
                     scan_id=scan_id,
                     title=finding.get("title", "Unnamed vulnerability"),
                     description=finding.get("description", ""),
-                    severity=finding.get("severity", "low"),
+                    severity=severity,
                     vulnerability_type=finding.get("tier", "general"),
-                    confidence="high" if finding.get("severity") in {"critical", "high"} else "medium",
+                    confidence="high" if severity in {"critical", "high"} else "medium",
                     cwe=f"CWE-{finding.get('id', 'N/A')}",
-                    cvss=round(4.0 if finding.get("severity") == "medium" else 7.5, 1),
+                    cvss=cvss_by_severity.get(severity, 3.1),
                     parameter=finding.get("payload", "n/a"),
                     poc=finding.get("detection_logic", "n/a"),
                     remediation=finding.get("remediation", "n/a"),

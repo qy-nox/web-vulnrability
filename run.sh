@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="${ROOT_DIR}/backend"
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.yml"
+HEALTH_CHECK_MAX_ATTEMPTS="${HEALTH_CHECK_MAX_ATTEMPTS:-40}"
 
 if [[ "${1:-}" == "--help" ]]; then
   echo "Usage: ./run.sh [--docker]"
@@ -42,13 +43,17 @@ if [[ "${1:-}" == "--docker" ]]; then
   echo "[5/7] Waiting for health checks"
   for service in postgres backend frontend; do
     cid="$(docker compose -f "${COMPOSE_FILE}" ps -q "${service}")"
-    for _ in {1..40}; do
+    for ((i=0; i<HEALTH_CHECK_MAX_ATTEMPTS; i++)); do
       state="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${cid}")"
       if [[ "${state}" == "healthy" || "${state}" == "running" ]]; then
         break
       fi
       sleep 2
     done
+    if [[ "${state}" != "healthy" && "${state}" != "running" ]]; then
+      echo "Service '${service}' did not become healthy in time." >&2
+      exit 1
+    fi
   done
 
   echo "[6/7] Initializing database schema"
@@ -60,13 +65,17 @@ PY
   echo "[7/7] Verifying service connectivity"
   python3 - <<'PY'
 import urllib.request
+import urllib.error
 checks = {
     "frontend": "http://localhost:3000",
     "backend": "http://localhost:8000/api/health",
 }
 for name, url in checks.items():
-    with urllib.request.urlopen(url, timeout=10) as response:
-        print(f"{name}: {response.status}")
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            print(f"{name}: {response.status}")
+    except urllib.error.URLError as exc:
+        raise SystemExit(f"{name} connectivity check failed for {url}: {exc}")
 PY
 
   echo
