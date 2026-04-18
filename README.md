@@ -38,12 +38,52 @@ web-vulnrability/
 └── docker-compose.yml
 ```
 
-## Quick Start (Backend)
+## Setup
+
+### Linux/macOS
 
 ```bash
-cd backend
-python -m pip install -r requirements.txt
-PYTHONPATH=. uvicorn src.api.app:app --reload
+chmod +x scripts/setup.sh run.sh
+./scripts/setup.sh
+```
+
+### Windows (PowerShell/CMD)
+
+```bat
+python -m pip install -r backend\requirements.txt
+cd frontend && npm install && cd ..
+```
+
+## Run
+
+### Local backend (recommended)
+
+```bash
+./run.sh
+```
+
+Windows:
+
+```bat
+run.bat
+```
+
+### Docker backend
+
+```bash
+./run.sh --docker
+```
+
+The backend is available at `http://localhost:8000`.
+
+### Frontend scaffold
+
+The frontend is currently a scaffold. The configured scripts are placeholders:
+
+```bash
+cd frontend
+npm run test
+npm run build
 ```
 
 ## Key API Endpoints

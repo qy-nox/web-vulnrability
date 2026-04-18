@@ -1,68 +1,21 @@
-# Setup Script for web-vulnrability
+#!/usr/bin/env bash
+set -euo pipefail
 
-## setup.sh (Linux/Mac)
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_REQS="${ROOT_DIR}/backend/requirements.txt"
 
-```bash
-#!/bin/bash
+echo "[1/2] Installing backend dependencies"
+if [[ ! -f "${BACKEND_REQS}" ]]; then
+  echo "Missing requirements file: ${BACKEND_REQS}" >&2
+  exit 1
+fi
+python3 -m pip install -r "${BACKEND_REQS}"
 
-# Update package lists and install Docker
-if ! command -v docker &> /dev/null
-then
-    echo "Docker not found. Installing Docker..."
-    sudo apt-get update
-    sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get update
-    sudo apt-get install -y docker-ce
+if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
+  echo "[2/2] Installing frontend dependencies"
+  (cd "${ROOT_DIR}/frontend" && npm install)
 fi
 
-# Clone the repository
-git clone https://github.com/your_username/web-vulnrability.git
-cd web-vulnrability
-
-# Copy .env.example to .env
-cp .env.example .env
-
-# Initialize Database
-docker-compose up -d db
-# You might need to wait until the database is ready
-sleep 10 
-
-# Run database migrations
-docker-compose exec app php artisan migrate
-
-# Start all services
-docker-compose up -d
-```
-
-## setup.bat (Windows)
-
-```bat
-@echo off
-
-REM Check if Docker is installed
-where docker >nul 2>&1
-if %errorlevel% neq 0 (
-    echo Docker not found. Please install Docker Desktop for Windows.
-    exit /b
-)
-
-REM Clone the repository
-git clone https://github.com/your_username/web-vulnrability.git
-cd web-vulnrability
-
-REM Copy .env.example to .env
-copy .env.example .env
-
-REM Initialize Database
-docker-compose up -d db
-REM Delay to ensure database is ready
-timeout /t 10
-
-REM Run database migrations
-docker-compose exec app php artisan migrate
-
-REM Start all services
-docker-compose up -d
-```
+echo "Setup complete."
+echo "Run backend locally: ./run.sh"
+echo "Run backend with Docker: ./run.sh --docker"

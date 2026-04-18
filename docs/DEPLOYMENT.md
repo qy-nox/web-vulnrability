@@ -1,7 +1,16 @@
 # Deployment
 
-Use Docker Compose for local deployment:
+## Local run (without Docker)
 
 ```bash
-docker compose up --build
+./scripts/setup.sh
+./run.sh
 ```
+
+## Docker run
+
+```bash
+./run.sh --docker
+```
+
+Backend URL: `http://localhost:8000`
