@@ -13,4 +13,5 @@
 ./run.sh --docker
 ```
 
-Backend URL: `http://localhost:8000`
+- Frontend URL: `http://localhost:3000`
+- Backend URL: `http://localhost:8000`

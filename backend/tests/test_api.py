@@ -18,3 +18,32 @@ def test_checks_summary_endpoint() -> None:
     data = response.json()
     assert data["total_checks"] >= 2000
     assert data["tier_count"] >= 20
+
+
+def test_scan_and_results_endpoints() -> None:
+    response = client.post("/api/scan", json={"url": "https://example.com"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "completed"
+    assert payload["scan_id"].startswith("scan-")
+
+    scan_id = payload["scan_id"]
+
+    detail = client.get(f"/api/scan/{scan_id}")
+    assert detail.status_code == 200
+    assert detail.json()["scan_id"] == scan_id
+
+    vulnerabilities = client.get("/api/vulnerabilities")
+    assert vulnerabilities.status_code == 200
+    assert vulnerabilities.json()["count"] >= 1
+    first = vulnerabilities.json()["items"][0]
+    assert "vulnerability_type" in first
+    assert "confidence" in first
+
+    report = client.get(f"/api/report/{scan_id}")
+    assert report.status_code == 200
+    assert "json" in report.json()["formats"]
+
+    results = client.get("/api/results")
+    assert results.status_code == 200
+    assert results.json()["count"] >= 1

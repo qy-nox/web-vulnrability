@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field, HttpUrl
 
 from src.core.advanced_scanner import SCANNER
@@ -8,9 +8,10 @@ from src.database.db_manager import InMemoryDBManager
 from src.reporting.report_generator import ReportGenerator
 from src.utils.config import CONFIG
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 DB = InMemoryDBManager()
 REPORTER = ReportGenerator()
+DB.initialize_schema()
 
 
 class ScanRequest(BaseModel):
@@ -21,44 +22,135 @@ class BatchScanRequest(BaseModel):
     urls: List[HttpUrl] = Field(min_length=1, max_length=CONFIG.max_batch_targets)
 
 
-@router.get("/health")
+@router.get("/api/v1/health")
+@router.get("/api/health")
 def health() -> dict:
     return {"status": "ok", "service": "advanced-web-vulnerability-system"}
 
 
-@router.get("/checks/summary")
+@router.get("/api/v1/checks/summary")
+@router.get("/api/checks/summary")
 def checks_summary() -> dict:
     return SCANNER.checks_summary()
 
 
-@router.post("/scan")
+def _run_scan(url: str) -> dict:
+    result = SCANNER.scan_target(url)
+    record = DB.add_scan(result.target, result.risk_score, result.blocked, result.findings)
+    report = REPORTER.generate_json_report(result.__dict__)
+    return {"scan_id": record.id, "status": "completed", "report": report}
+
+
+@router.post("/api/v1/scan")
+@router.post("/api/scan")
 def scan(request: ScanRequest) -> dict:
-    result = SCANNER.scan_target(str(request.url))
-    DB.add_scan(result.target, result.risk_score, result.blocked, result.findings)
-    return REPORTER.generate_json_report(result.__dict__)
+    return _run_scan(str(request.url))
 
 
-@router.post("/scan/batch")
+@router.post("/api/v1/scan/batch")
 def scan_batch(request: BatchScanRequest) -> dict:
-    outputs = []
+    outputs: List[dict] = []
     for url in request.urls:
-        result = SCANNER.scan_target(str(url))
-        outputs.append(REPORTER.generate_json_report(result.__dict__))
+        outputs.append(_run_scan(str(url)))
     return {"count": len(outputs), "results": outputs}
 
 
-@router.get("/scans")
+@router.get("/api/v1/scans")
 def list_scans() -> dict:
     records = DB.list_scans()
     return {
         "count": len(records),
         "items": [
             {
+                "id": r.id,
                 "target": r.target,
                 "risk_score": r.risk_score,
                 "blocked": r.blocked,
                 "created_at": r.created_at.isoformat() + "Z",
             }
             for r in records
+        ],
+    }
+
+
+@router.get("/api/scan/{scan_id}")
+def get_scan(scan_id: str) -> dict:
+    record = DB.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return {
+        "scan_id": record.id,
+        "target": record.target,
+        "risk_score": record.risk_score,
+        "blocked": record.blocked,
+        "findings_count": len(record.findings),
+        "findings": record.findings,
+        "created_at": record.created_at.isoformat() + "Z",
+    }
+
+
+@router.get("/api/vulnerabilities")
+def list_vulnerabilities(severity: str | None = Query(default=None)) -> dict:
+    rows = DB.list_vulnerabilities()
+    if severity:
+        rows = [row for row in rows if row.severity.lower() == severity.lower()]
+    return {
+        "count": len(rows),
+        "items": [
+            {
+                "id": row.id,
+                "scan_id": row.scan_id,
+                "title": row.title,
+                "description": row.description,
+                "severity": row.severity,
+                "vulnerability_type": row.vulnerability_type,
+                "confidence": row.confidence,
+                "cvss_score": row.cvss,
+                "cwe": row.cwe,
+                "affected_parameter": row.parameter,
+                "proof_of_concept": row.poc,
+                "remediation": row.remediation,
+            }
+            for row in rows
+        ],
+    }
+
+
+@router.get("/api/report/{scan_id}")
+def get_report(scan_id: str) -> dict:
+    record = DB.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    payload = {
+        "target": record.target,
+        "risk_score": record.risk_score,
+        "blocked": record.blocked,
+        "findings": record.findings,
+        "total_checks": SCANNER.checks_summary()["total_checks"],
+    }
+    report = REPORTER.generate_json_report(payload)
+    return {
+        "scan_id": scan_id,
+        "formats": ["html", "pdf", "json", "csv"],
+        "report": report,
+    }
+
+
+@router.get("/api/results")
+def get_results() -> dict:
+    rows = DB.list_results()
+    return {
+        "count": len(rows),
+        "items": [
+            {
+                "id": row.id,
+                "scan_id": row.scan_id,
+                "target": row.target,
+                "risk_score": row.risk_score,
+                "blocked": row.blocked,
+                "findings_count": row.findings_count,
+                "created_at": row.created_at.isoformat() + "Z",
+            }
+            for row in rows
         ],
     }
