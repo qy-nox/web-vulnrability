@@ -2,7 +2,7 @@
 
 This repository now includes an enterprise-grade scaffold for a web vulnerability platform with:
 
-- **1020 checks** across **10 tiers** (zero-day, API, cloud, ML, network, client-side, auth/session, business logic, SSL/TLS, compliance)
+- **2000+ checks** across foundational + advanced scanner modules (zero-day, API, cloud, ML, network, client-side, auth/session, business logic, SSL/TLS, compliance, CloudFlare/WAF bypass, XXE/deserialization, SSRF, dependencies, WebSocket, JavaScript/DOM and more)
 - **FastAPI backend** with single and batch scan endpoints
 - **Real-time monitoring stub** using WebSocket alerts
 - **Risk scoring + CVSS base score + exploit chain suggestion**
