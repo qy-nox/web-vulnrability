@@ -68,23 +68,16 @@ Windows:
 run.bat
 ```
 
-### Docker backend
+### Docker stack (frontend + backend + database)
 
 ```bash
 ./run.sh --docker
 ```
 
-The backend is available at `http://localhost:8000`.
-
-### Frontend scaffold
-
-The frontend is currently a scaffold. The configured scripts are placeholders:
-
-```bash
-cd frontend
-npm run test
-npm run build
-```
+Services:
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`
 
 ## Key API Endpoints
 
