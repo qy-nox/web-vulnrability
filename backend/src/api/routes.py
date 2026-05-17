@@ -42,9 +42,12 @@ def checks_summary() -> dict:
 
 
 def _run_scan(url: str) -> dict:
-    result = SCANNER.scan_target(url)
-    record = DB.add_scan(result.target, result.risk_score, result.blocked, result.findings)
-    report = REPORTER.generate_json_report(result.__dict__)
+    try:
+        result = SCANNER.scan_target(url)
+        record = DB.add_scan(result.target, result.risk_score, result.blocked, result.findings)
+        report = REPORTER.generate_json_report(result.__dict__)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Scan execution failed: {exc}") from exc
     return {"scan_id": record.id, "status": "completed", "report": report}
 
 
@@ -58,7 +61,11 @@ def scan(request: ScanRequest) -> dict:
 def scan_batch(request: BatchScanRequest) -> dict:
     outputs: List[dict] = []
     for url in request.urls:
-        outputs.append(_run_scan(str(url)))
+        target = str(url)
+        try:
+            outputs.append(_run_scan(target))
+        except HTTPException as exc:
+            outputs.append({"target": target, "status": "failed", "error": str(exc.detail)})
     return {"count": len(outputs), "results": outputs}
 
 
