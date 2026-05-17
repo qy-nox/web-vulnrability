@@ -1,8 +1,8 @@
 # Advanced Enterprise Web Vulnerability Detection & Blocking System
 
-This repository now includes an enterprise-grade scaffold for a web vulnerability platform with:
+This repository includes an enterprise-grade scaffold for a web vulnerability platform with:
 
-- **2000+ checks** across foundational + advanced scanner modules (zero-day, API, cloud, ML, network, client-side, auth/session, business logic, SSL/TLS, compliance, CloudFlare/WAF bypass, XXE/deserialization, SSRF, dependencies, WebSocket, JavaScript/DOM and more)
+- **3900+ checks** across foundational + advanced scanner modules (zero-day, API, cloud, ML, network, client-side, auth/session, business logic, SSL/TLS, compliance, CloudFlare/WAF bypass, XXE/deserialization, SSRF, dependencies, WebSocket, JavaScript/DOM and more)
 - **FastAPI backend** with single and batch scan endpoints
 - **Real-time monitoring stub** using WebSocket alerts
 - **Risk scoring + CVSS base score + exploit chain suggestion**

@@ -3,6 +3,7 @@
 ## Core Endpoints
 
 - `POST /api/scan` - Start a scan (`{"url":"https://example.com"}`)
+- `POST /api/v1/scan/batch` - Run batch scan (`{"urls":[...]}`); failed targets return `{status:"failed", error:"..."}` while others continue
 - `GET /api/scan/{id}` - Scan details
 - `GET /api/vulnerabilities` - Vulnerability list (`?severity=high`)
 - `GET /api/report/{id}` - Report payload + available formats
